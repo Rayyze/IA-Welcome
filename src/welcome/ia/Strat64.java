@@ -5,9 +5,13 @@ package welcome.ia;
 import java.util.ArrayList;
 import java.util.Arrays; 
 import welcome.Jeu;
+import welcome.Maison;
+import welcome.Rue;
 import welcome.utils.RandomSingleton;
 
 public class Strat64 extends Strat{
+
+    public int[] weigths = new int[15];
     
     public Strat64(){
 
@@ -51,13 +55,6 @@ public class Strat64 extends Strat{
     @Override
     public int choixEmplacement(Jeu j, int joueur, int numero, ArrayList<Integer> placeValide){
         int res=-1;
-        int[] decisionWeigth = new int[placeValide.size()];
-        Arrays.fill(decisionWeigth, 1);
-
-        System.out.println(placeValide);
-        for(int i=0; i<placeValide.size(); i++) {
-            
-        }
         
         //A COMPLETER
         
@@ -110,6 +107,33 @@ public class Strat64 extends Strat{
         //A COMPLETER
         
         return res;
+    }
+
+    private boolean isFillable(Jeu j, int joueur, int place) {
+        int numRue = place/100;
+        Rue rue = j.joueurs[joueur].ville.rues[numRue];
+        Maison[] maisons = rue.maisons;
+
+        int inf = 0;
+        int sup = 17;
+        boolean flag = false;
+        int count = 0;
+
+        for (int i=0; i<rue.taille; i++) {
+            if (!maisons[i].estVide() && !flag) {
+                inf = maisons[i].numero;
+            } else if (!maisons[i].estVide() && flag && maisons[i].numero<sup) {
+                sup = maisons[i].numero;
+            } else if (maisons[i].estVide()) {
+                count++;
+            }
+        }
+
+        if (count+1<=sup-inf) {
+            return true;
+        } else {
+            return false;
+        }
     }
     
     @Override
