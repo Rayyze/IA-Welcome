@@ -3,8 +3,10 @@
  */
 package welcome.ia;
 import java.util.ArrayList;
-import java.util.Arrays; 
+import java.util.Map;
 import welcome.Jeu;
+import welcome.Joueur;
+import welcome.Travaux;
 import welcome.utils.RandomSingleton;
 
 public class Strat64 extends Strat{
@@ -15,7 +17,7 @@ public class Strat64 extends Strat{
     
     @Override
     public String nomVille(){
-        return "BidonVille";
+        return "big burger city";
     }
     
     @Override
@@ -26,6 +28,7 @@ public class Strat64 extends Strat{
     //Choisir au hasard parmi les 3 numéros dispos
     @Override
     public int choixCombinaison(Jeu j, int joueur){
+        
         int res=-1;
         
         //A COMPLETER
@@ -51,13 +54,6 @@ public class Strat64 extends Strat{
     @Override
     public int choixEmplacement(Jeu j, int joueur, int numero, ArrayList<Integer> placeValide){
         int res=-1;
-        int[] decisionWeigth = new int[placeValide.size()];
-        Arrays.fill(decisionWeigth, 1);
-
-        System.out.println(placeValide);
-        for(int i=0; i<placeValide.size(); i++) {
-            
-        }
         
         //A COMPLETER
         
@@ -111,6 +107,43 @@ public class Strat64 extends Strat{
         
         return res;
     }
+
+    private ArrayList<Integer> construirePossibilite(int numero, Joueur joueur){
+        int min; // Variable utiles
+        ArrayList<Integer> possibilite= new ArrayList<Integer>(); //List des possibilités à construire
+        for(int i=0; i<3; i++){//Pour chaque rue
+            min=joueur.ville.rues[i].taille-1; //on part de la fin
+            while(min>=0  && (joueur.ville.rues[i].maisons[min].numero==-1 || joueur.ville.rues[i].maisons[min].numero > numero))
+                min--; // on décrement le min tant qu'on a pas trouvé un numéro <=
+            if(min<0 || joueur.ville.rues[i].maisons[min].numero!=numero){
+
+                min++;// On part de la case suivante
+                while(min < joueur.ville.rues[i].taille && joueur.ville.rues[i].maisons[min].numero == -1){
+                    possibilite.add((Integer)(min+ 100*i)); // on construit les possibilités tant qu'on a des cases vides
+                    min++;
+                }       
+            }
+        }
+        return possibilite;
+    }
+
+    private Map<Integer, Integer> gradeCombination(Jeu j, int joueur) {
+        //On récupère les combinaisons
+        int numero0 = ((Travaux) j.numeros[0].top()).getNumero();
+        String action0 = ((Travaux) j.actions[0].top()).getActionString();
+        int numero1 = ((Travaux) j.numeros[1].top()).getNumero();
+        String action1 = ((Travaux) j.actions[0].top()).getActionString();
+        int numero2 = ((Travaux) j.numeros[2].top()).getNumero();
+        String action2 = ((Travaux) j.actions[0].top()).getActionString();
+
+        return null;
+    }
+
+    //TODO ecrire la methode isFillable
+
+    //TODO ecrire methode isFolowingPlan
+
+    //TODO ecrire methode distanceToIdealPlace
     
     @Override
     public void resetStrat(){};

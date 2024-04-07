@@ -54,5 +54,7 @@ public class Main {
             //System.out.println(e);
         }
     }
+
+    //TODO écrire la methode train
     
 }
