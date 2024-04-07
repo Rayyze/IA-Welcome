@@ -145,7 +145,21 @@ public class Strat64 extends Strat{
 
     //TODO ecrire methode isFolowingPlan
 
-    //TODO ecrire methode distanceToIdealPlace
+    private double distanceToIdealPlace(Jeu j, int joueur, int number, int place) {
+        //On calcule la position du numero par rapport à la taille de la rue, et la position de la place ou on souhaite ajouter la maison par rapport à la taille de la rue 
+        //le resultat est compris entre 0 et 1 (la plupart du temps pour les actions à réaliser)
+        int position = place%100;
+        int tailleRue = j.joueurs[joueur].ville.rues[place/100].taille;
+
+        double idealRatio = (double) number/tailleRue;
+        double realRatio = (double) position/tailleRue;
+
+        return Math.sqrt(Math.pow((realRatio-idealRatio), 2));
+    }
+
+    private boolean isParkFull(int indexRue, int joueur) { //TODO
+        return true;
+    }
 
     private boolean isFillable(Jeu j, int joueur, int place) {
         int numRue = place/100;
