@@ -7,9 +7,13 @@ import java.util.Map;
 import welcome.Jeu;
 import welcome.Joueur;
 import welcome.Travaux;
+import welcome.Maison;
+import welcome.Rue;
 import welcome.utils.RandomSingleton;
 
 public class Strat64 extends Strat{
+
+    public int[] weigths = new int[15];
     
     public Strat64(){
 
@@ -139,11 +143,36 @@ public class Strat64 extends Strat{
         return null;
     }
 
-    //TODO ecrire la methode isFillable
-
     //TODO ecrire methode isFolowingPlan
 
     //TODO ecrire methode distanceToIdealPlace
+
+    private boolean isFillable(Jeu j, int joueur, int place) {
+        int numRue = place/100;
+        Rue rue = j.joueurs[joueur].ville.rues[numRue];
+        Maison[] maisons = rue.maisons;
+
+        int inf = 0;
+        int sup = 17;
+        boolean flag = false;
+        int count = 0;
+
+        for (int i=0; i<rue.taille; i++) {
+            if (!maisons[i].estVide() && !flag) {
+                inf = maisons[i].numero;
+            } else if (!maisons[i].estVide() && flag && maisons[i].numero<sup) {
+                sup = maisons[i].numero;
+            } else if (maisons[i].estVide()) {
+                count++;
+            }
+        }
+
+        if (count+1<=sup-inf) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
     @Override
     public void resetStrat(){};
