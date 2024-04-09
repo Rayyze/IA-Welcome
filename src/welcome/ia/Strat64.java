@@ -3,10 +3,12 @@
  */
 package welcome.ia;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import welcome.Jeu;
 import welcome.Joueur;
 import welcome.Travaux;
+import welcome.Ville;
 import welcome.Maison;
 import welcome.Rue;
 import welcome.utils.RandomSingleton;
@@ -14,6 +16,8 @@ import welcome.utils.RandomSingleton;
 public class Strat64 extends Strat{
 
     public int[] weigths = new int[15];
+
+    private Map<String, Integer> decisionsScoreMap = new HashMap<String, Integer>();
     
     public Strat64(){
 
@@ -21,7 +25,7 @@ public class Strat64 extends Strat{
     
     @Override
     public String nomVille(){
-        return "big burger city";
+        return "huuuuuuuuuuh";
     }
     
     @Override
@@ -32,6 +36,7 @@ public class Strat64 extends Strat{
     //Choisir au hasard parmi les 3 numéros dispos
     @Override
     public int choixCombinaison(Jeu j, int joueur){
+        
         
         int res=-1;
         
@@ -94,6 +99,8 @@ public class Strat64 extends Strat{
     @Override
     public int choixBarriere(Jeu j, int joueur,  ArrayList<Integer> placeValide){
         int res=-1;
+
+        System.out.println(placeValide);
         
         //A COMPLETER
         
@@ -102,12 +109,11 @@ public class Strat64 extends Strat{
         return res;
     }
     
-    //Valide toujours un plan
     @Override
     public boolean validePlan(Jeu j, int joueur, int plan) {
         boolean res = true;
         
-        //A COMPLETER
+        //Valide toujours un plan
         
         return res;
     }
@@ -131,19 +137,100 @@ public class Strat64 extends Strat{
         return possibilite;
     }
 
-    private Map<Integer, Integer> gradeCombination(Jeu j, int joueur) {
-        //On récupère les combinaisons
-        int numero0 = ((Travaux) j.numeros[0].top()).getNumero();
-        String action0 = ((Travaux) j.actions[0].top()).getActionString();
-        int numero1 = ((Travaux) j.numeros[1].top()).getNumero();
-        String action1 = ((Travaux) j.actions[0].top()).getActionString();
-        int numero2 = ((Travaux) j.numeros[2].top()).getNumero();
-        String action2 = ((Travaux) j.actions[0].top()).getActionString();
+    private Map<String, Integer> gradeCombination(Jeu j, int joueur) {
+        String key = "";
+        int score;
+
+        int numero;
+        String action;
+        ArrayList<Integer> possibilities;
+
+        //decisionsScoreMap
+
+        for (int i=0; i<3; i++) {
+            key = Integer.toString(i);
+
+            //On récupère les combinaisons
+            numero = ((Travaux) j.numeros[i].top()).getNumero();
+            action = ((Travaux) j.actions[i].top()).getActionString(); //"Fabricant de piscine", "Agence d'intérim", "Numéro Bis\t", "Paysagiste\t", "Agent Immobilier", "Géomètre\t"
+
+            possibilities = construirePossibilite(numero, j.joueurs[joueur]);
+
+            for(int k=0; k<possibilities.size(); k++) {
+                switch (action) {
+                    case "Fabricant de piscine":
+                        //TODO
+                        break;
+
+                    case "Agence d'intérim":
+                        //TODO
+                        break;
+
+                    case "Numéro Bis\t":
+                        //TODO
+                        break;
+                    
+                    case "Paysagiste\t":
+                        //TODO
+                        break;
+                    
+                    case "Agent Immobilier":
+                        //TODO
+                        break;
+
+                    case "Géomètre\t":
+                        //TODO
+                        break;
+                
+                    default: 
+                        break;
+                }
+            }
+        }
 
         return null;
     }
 
-    //TODO ecrire methode isFolowingPlan
+    //TODO takeDecisions();
+
+    //renvoi les différence de lotissements par taille dans la rue en fonction du placement de la barrière
+    private int[] lotissementChanged(Jeu j, int joueur, int place) {
+        boolean[] barrieresList = j.joueurs[joueur].ville.barrieres[place/100];
+        int[] nbLotissement = new int[6];
+
+        int count = 0;
+        for (int i=1; i<barrieresList.length; i++) {
+            if (barrieresList[i]) {
+                if (count<=5) {
+                    nbLotissement[count]++;
+                }
+                count = 0;
+            } else {
+                count++;
+            }
+        }
+
+        int[] newNbLotissement = new int[6];
+        barrieresList[place%100] = true;
+
+        count = 0;
+        for (int i=1; i<barrieresList.length; i++) {
+            if (barrieresList[i]) {
+                if (count<=5) {
+                    newNbLotissement[count]++;
+                }
+                count = 0;
+            } else {
+                count++;
+            }
+        }
+
+        int[] result = new int[6];
+        for (int i=0; i<result.length; i++) {
+            result[i] = newNbLotissement[i] - nbLotissement[i];
+        }
+        return result;
+    }
 
     private double distanceToIdealPlace(Jeu j, int joueur, int number, int place) {
         //On calcule la position du numero par rapport à la taille de la rue, et la position de la place ou on souhaite ajouter la maison par rapport à la taille de la rue 
@@ -157,8 +244,9 @@ public class Strat64 extends Strat{
         return Math.sqrt(Math.pow((realRatio-idealRatio), 2));
     }
 
-    private boolean isParkFull(int indexRue, int joueur) { //TODO
-        return true;
+    private boolean isParkFull(Jeu j, int joueur, int indexRue) {
+        Ville ville = j.joueurs[joueur].ville;
+        return (ville.nbParcs[indexRue]==ville.maxParcs[indexRue]);
     }
 
     private boolean isFillable(Jeu j, int joueur, int place) {
@@ -186,6 +274,10 @@ public class Strat64 extends Strat{
         } else {
             return false;
         }
+    }
+
+    private boolean isOnPool(Jeu j, int joueur, int place) {
+        return j.joueurs[joueur].ville.rues[place/100].maisons[place%100].emplacementPiscine;
     }
     
     @Override
