@@ -15,9 +15,26 @@ import welcome.utils.RandomSingleton;
 
 public class Strat64 extends Strat{
 
-    public int[] weigths = new int[15];
+    public Map<String, Double> weigths = new HashMap<String, Double>();
+    /*
+     * park1
+     * park2
+     * park3
+     * pool
+     * interim
+     * bisneeded
+     * bisnotneeded
+     * lot1
+     * lot2
+     * lot3
+     * lot4
+     * lot5
+     * lot6
+     * place
+     * plan
+     */
 
-    private Map<String, Integer> decisionsScoreMap = new HashMap<String, Integer>();
+    private Map<String, Double> decisionsScoreMap = new HashMap<String, Double>();
     
     public Strat64(){
 
@@ -157,9 +174,14 @@ public class Strat64 extends Strat{
             possibilities = construirePossibilite(numero, j.joueurs[joueur]);
 
             for(int k=0; k<possibilities.size(); k++) {
+                key += "," + Integer.toString(possibilities.get(k));
                 switch (action) {
                     case "Fabricant de piscine":
-                        //TODO
+                        if (isOnPool(j, joueur, possibilities.get(k))) {
+                            decisionsScoreMap.put(key + ",pool", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weigths.get("pool"));
+                        } else {
+                            decisionsScoreMap.put(key + ",nopool", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)));
+                        }
                         break;
 
                     case "Agence d'intérim":
@@ -171,17 +193,23 @@ public class Strat64 extends Strat{
                         break;
                     
                     case "Paysagiste\t":
-                        //TODO
+                        if (isParkFull(j, joueur, possibilities.get(k))) {
+                            decisionsScoreMap.put(key + ",nopark", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)));
+                        } else {
+                            decisionsScoreMap.put(key + ",park", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weigths.get("park" + Integer.toString(possibilities.get(k)/100 + 1)));
+                        }
                         break;
-                    
+
                     case "Agent Immobilier":
-                        //TODO
+                        for(int l=1; l<7; l++) { //TODO ajouter un if pour savoir si l'investissemenjt est plein
+                            decisionsScoreMap.put(key + "," + Integer.toString(l), distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weigths.get("lot" + Integer.toString(l)));
+                        }
                         break;
 
                     case "Géomètre\t":
                         //TODO
                         break;
-                
+
                     default: 
                         break;
                 }
@@ -244,7 +272,8 @@ public class Strat64 extends Strat{
         return Math.sqrt(Math.pow((realRatio-idealRatio), 2));
     }
 
-    private boolean isParkFull(Jeu j, int joueur, int indexRue) {
+    private boolean isParkFull(Jeu j, int joueur, int place) {
+        int indexRue = place/100;
         Ville ville = j.joueurs[joueur].ville;
         return (ville.nbParcs[indexRue]==ville.maxParcs[indexRue]);
     }
