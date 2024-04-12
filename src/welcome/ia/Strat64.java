@@ -2,7 +2,11 @@
  * 
  */
 package welcome.ia;
+import static java.lang.Integer.parseInt;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import welcome.Jeu;
@@ -11,8 +15,8 @@ import welcome.Lotissement;
 import welcome.Travaux;
 import welcome.Ville;
 import welcome.Maison;
+import welcome.Plan;
 import welcome.Rue;
-import welcome.utils.RandomSingleton;
 
 public class Strat64 extends Strat{
 
@@ -37,9 +41,32 @@ public class Strat64 extends Strat{
      */
 
     private Map<String, Double> decisionsScoreMap = new HashMap<String, Double>();
+    private int choixCombinaisonResult = 0;
+    private int choixEmplacementResult = 0;
+    private int choixNumeroResult = 0;
+    private int choixBisResult = 0;
+    private int choixBarriereResult = 0;
+    private int valoriseLotissementResult = 0;
     
     public Strat64(){
-
+        Map<String, Double> initialWeights = new HashMap<String, Double>();
+        initialWeights.put("park1", 0.80);
+        initialWeights.put("park2", 0.80);
+        initialWeights.put("park3", 0.80);
+        initialWeights.put("pool", 0.60);
+        initialWeights.put("interim", 0.30);
+        initialWeights.put("interimneeded", 0.75);
+        initialWeights.put("bisneeded", 0.70);
+        initialWeights.put("bisnotneeded", 0.10);
+        initialWeights.put("lot1", 0.80);
+        initialWeights.put("lot2", 0.20);
+        initialWeights.put("lot3", 0.20);
+        initialWeights.put("lot4", 0.75);
+        initialWeights.put("lot5", 0.20);
+        initialWeights.put("lot6", 0.70);
+        initialWeights.put("place", 0.90);
+        initialWeights.put("plan", 0.50);
+        setWeights(initialWeights);
     }
 
     public Map<String, Double> getWeights() {
@@ -64,80 +91,42 @@ public class Strat64 extends Strat{
         return "CHOUIPPE, Léo";
     }
     
-    //Choisir au hasard parmi les 3 numéros dispos
     @Override
     public int choixCombinaison(Jeu j, int joueur){
-        
-        
-        int res=-1;
-        
-        //A COMPLETER
-        
-        if(res<0 || res>2)
-            res=RandomSingleton.getInstance().nextInt(3);
-        return res;
+        decisionsScoreMap = new HashMap<String, Double>();
+        gradeCombination(j, joueur);
+        takeDecision();
+        return choixCombinaisonResult;
     }
     
-    //Choisir de placer un numéro bis
     @Override
     public int choixBis(Jeu j, int joueur, ArrayList<Integer> placeValide){
-        int res=-1;
-        
-        //A COMPLETER
-        
-        if(res<0 || res>placeValide.size()-1)
-            res=RandomSingleton.getInstance().nextInt(placeValide.size());
-        return res;
+        System.out.println(choixBisResult);
+        System.out.println(placeValide);
+        return placeValide.indexOf(choixBisResult);
     }
     
-    //Choisir au hasard parmi les emplacements dispos
     @Override
     public int choixEmplacement(Jeu j, int joueur, int numero, ArrayList<Integer> placeValide){
-        int res=-1;
-        
-        //A COMPLETER
-        
-        if(res<0 || res>placeValide.size()-1)
-            res=RandomSingleton.getInstance().nextInt(placeValide.size());
-        return res;
+        return placeValide.indexOf(choixEmplacementResult);
     }
     
-    //Choisir le même numéro que celui de la carte quand l'action est un intérimaire
     @Override
     public int choixNumero(Jeu j, int joueur, int numero){
-        int res=-1;
-        
-        //A COMPLETER
-        
-        if((res<(numero-2) || res>(numero+2)) || res<0)
-            res=Math.max(0, RandomSingleton.getInstance().nextInt(5) + numero - 2) ;
-        return res;
+        System.out.println(choixNumeroResult);
+        System.out.println(numero);
+        return choixNumeroResult;
     }
     
-    //Valorise aléatoirement une taille de lotissements (proba plus forte si plus d'avancements possibles)
     @Override
     public int valoriseLotissement(Jeu j, int joueur){        
-        int res=-1;
-        
-        //A COMPLETER
-        
-        if(res<1 || res>6)
-            res=RandomSingleton.getInstance().nextInt(6)+1;
-        return res;
+        return valoriseLotissementResult;
     }
     
     //Met une barrière à une position aléatoire
     @Override
     public int choixBarriere(Jeu j, int joueur,  ArrayList<Integer> placeValide){
-        int res=-1;
-
-        System.out.println(placeValide);
-        
-        //A COMPLETER
-        
-        if(res<0 || res>placeValide.size()-1)
-            res=RandomSingleton.getInstance().nextInt(placeValide.size());
-        return res;
+        return placeValide.indexOf(choixBarriereResult);
     }
     
     @Override
@@ -170,7 +159,6 @@ public class Strat64 extends Strat{
     //Construction des possibilités de placement des numéros bis
     private ArrayList<Integer> constuireBis(Joueur joueur){
         ArrayList<Integer> possibilite= new ArrayList<Integer>();
-        possibilite.add(1000);
         for(int i=0; i<3; i++){ //on parcours les rues
             for(int j=0; j<joueur.ville.rues[i].taille; j++){ //on parcours les maisons
                 if(joueur.ville.rues[i].maisons[j].estVide()){ //Pour chaque maison vide
@@ -208,7 +196,7 @@ public class Strat64 extends Strat{
         return possibilite;
     }
 
-    private Map<String, Integer> gradeCombination(Jeu j, int joueur) {
+    private void gradeCombination(Jeu j, int joueur) {
         String key = "";
 
         ArrayList<ArrayList<Integer>> numerosInterim = new ArrayList<ArrayList<Integer>>();
@@ -218,7 +206,6 @@ public class Strat64 extends Strat{
         ArrayList<Integer> possibilities;
 
         for (int i=0; i<3; i++) {
-            key = Integer.toString(i);
 
             numerosInterim.add(new ArrayList<Integer>());
 
@@ -229,21 +216,21 @@ public class Strat64 extends Strat{
             possibilities = construirePossibilite(numero, j.joueurs[joueur]);
 
             for(int k=0; k<possibilities.size(); k++) {
-                key += "," + Integer.toString(possibilities.get(k));
+                key = Integer.toString(i) + ";" + Integer.toString(possibilities.get(k));
                 switch (action) {
                     case "Fabricant de piscine":
                         if (isOnPool(j, joueur, possibilities.get(k))) {
-                            decisionsScoreMap.put(key + ",pool", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weights.get("pool"));
+                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("pool"));
                         } else {
-                            decisionsScoreMap.put(key + ",nopool", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)));
+                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
                         }
                         break;
 
                     case "Agence d'intérim":
                         if(isInterimNeeded(j, joueur, possibilities.get(k))) {
-                            decisionsScoreMap.put(key + ",0" + "interim", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weights.get("interimneeded"));
+                            decisionsScoreMap.put(key + ";interim;" + Integer.toString(numero), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("interimneeded"));
                         } else {
-                            decisionsScoreMap.put(key + ",0" + "interim", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weights.get("interim"));
+                            decisionsScoreMap.put(key + ";interim;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("interim"));
                         }
                         for (int l = -2; l<=2; l++) {
                             if (numero+l>=0) {
@@ -253,29 +240,50 @@ public class Strat64 extends Strat{
                         break;
 
                     case "Numéro Bis\t":
-                        //TODO parcourir les possibilités de placement de bis
+                        ArrayList<Integer> bisPossibilities = constuireBis(j.joueurs[joueur]);
+                        for (int l=0; l<bisPossibilities.size(); l++) {
+                            if (Math.abs(bisPossibilities.get(l))!=possibilities.get(k))
+                                if(isBisNeeded(j, joueur, Math.abs(bisPossibilities.get(l)))) {
+                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisneeded"));
+                                } else {
+                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisnotneeded"));
+                                }
+                        }
+                        decisionsScoreMap.put(key + ";bis;1000" , -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
                         break;
                     
                     case "Paysagiste\t":
                         if (isParkFull(j, joueur, possibilities.get(k))) {
-                            decisionsScoreMap.put(key + ",nopark", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)));
+                            decisionsScoreMap.put(key + ";nopark;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
                         } else {
-                            decisionsScoreMap.put(key + ",park", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weights.get("park" + Integer.toString(possibilities.get(k)/100 + 1)));
+                            decisionsScoreMap.put(key + ";park;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("park" + Integer.toString(possibilities.get(k)/100 + 1)));
                         }
                         break;
 
                     case "Agent Immobilier":
                         for(int l=1; l<7; l++) {
                             if(j.joueurs[joueur].ville.avancementPrixLotissement[l-1]==j.joueurs[joueur].ville.maxAvancement[l-1]) {
-                                decisionsScoreMap.put(key + "," + Integer.toString(l) + "full", distanceToIdealPlace(j, joueur, numero, possibilities.get(k)));
+                                decisionsScoreMap.put(key + ";invest;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
                             } else {
-                                decisionsScoreMap.put(key + "," + Integer.toString(l), distanceToIdealPlace(j, joueur, numero, possibilities.get(k)) + weights.get("lot" + Integer.toString(l)));
+                                decisionsScoreMap.put(key + ";invest;" + Integer.toString(l), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("lot" + Integer.toString(l)));
                             }
                         }
                         break;
 
                     case "Géomètre\t":
-                        //TODO parcourir les possibilités de placement de barrières
+                        ArrayList<Integer> barrierPossibilities = construireChoixPlacementBarriere(j.joueurs[joueur]);
+                        for (int l=0; l<barrierPossibilities.size(); l++) {
+                            int[] changedLot = lotissementChanged(j, joueur, barrierPossibilities.get(l));
+                            double lotImpact = 0.0;
+                            for (int m=0; m<6; m++) {
+                                lotImpact += changedLot[m]*weights.get("lot" + Integer.toString(m+1));
+                            }
+                            if(isFollowingPlan(j, joueur, barrierPossibilities.get(l))) {
+                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact + weights.get("plan"));
+                            } else {
+                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact);
+                            }
+                        }
                         break;
 
                     default: 
@@ -284,32 +292,86 @@ public class Strat64 extends Strat{
             }
         }
 
+
+        //TODO si refus de permis aucun interim n'est calculé
         for (int i=0; i<3; i++) {
-            key = Integer.toString(i);
             for (int k=0; k<numerosInterim.get(i).size(); k++){
                 ArrayList<Integer> interimPossibilities = construirePossibilite(numerosInterim.get(i).get(k), j.joueurs[joueur]);
+                System.out.println("nouveau num de l'interim : " + numerosInterim.get(i).get(k));
 
                 for (int l=0; l<interimPossibilities.size(); l++) {
+                    key = Integer.toString(i) + ";" + Integer.toString(interimPossibilities.get(l));
+
                     if(isInterimNeeded(j, joueur, interimPossibilities.get(l))) {
-                        decisionsScoreMap.put(key + "," + Integer.toString(l) + "interim", distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l)) + weights.get("interimneeded"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interimneeded"));
                     } else {
-                        decisionsScoreMap.put(key + "," + Integer.toString(l) + "interim", distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l)) + weights.get("interim"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interim"));
                     }
                 }
             }
         }
-
-        return null;
     }
 
-    //TODO takeDecisions();
+    private void takeDecision() {
+        double maxValue = Double.NEGATIVE_INFINITY;
+        String maxKey = null;
+
+        for (Map.Entry<String, Double> entry : decisionsScoreMap.entrySet()) {
+            String key = entry.getKey();
+            double value = entry.getValue();
+            
+            if (value > maxValue) {
+                maxValue = value;
+                maxKey = key;
+            }
+        }
+        System.out.println("decision : " + maxKey);
+        if (!decisionsScoreMap.isEmpty()) {
+            String[] decisions = maxKey.split(";");
+
+            choixCombinaisonResult = Integer.valueOf(decisions[0]);
+            choixEmplacementResult = Integer.valueOf(decisions[1]);
+
+            switch (decisions[2]) {
+                case "interim":
+                    choixNumeroResult = Integer.valueOf(decisions[3]);
+                    break;
+                
+                case "invest":
+                    valoriseLotissementResult = Integer.valueOf(decisions[3]);
+                    break;
+                
+                case "bis":
+                    choixBisResult = Integer.valueOf(decisions[3]);
+                    break;
+                
+                case "barrier":
+                    choixBarriereResult = Integer.valueOf(decisions[3]);
+                    break;
+                default:
+                    break;
+            } 
+        } 
+    }
 
     //renvoi les différence de lotissements par taille dans la rue en fonction du placement de la barrière
     private int[] lotissementChanged(Jeu j, int joueur, int place) {
         boolean[] barrieresList = j.joueurs[joueur].ville.barrieres[place/100];
-        int[] nbLotissement = new int[6];
+        int[] nbLotissement = lotNumber(barrieresList);
+        barrieresList[place%100] = true;
+        int[] newNbLotissement = lotNumber(barrieresList);
 
+        int[] result = new int[6];
+        for (int i=0; i<result.length; i++) {
+            result[i] = newNbLotissement[i] - nbLotissement[i];
+        }
+        return result;
+    }
+
+    private int[] lotNumber(boolean[] barrieresList) {
+        int[] nbLotissement = new int[] {0,0,0,0,0,0};
         int count = 0;
+
         for (int i=1; i<barrieresList.length; i++) {
             if (barrieresList[i]) {
                 if (count<=5) {
@@ -321,26 +383,46 @@ public class Strat64 extends Strat{
             }
         }
 
-        int[] newNbLotissement = new int[6];
-        barrieresList[place%100] = true;
+        return nbLotissement;
+    }
 
-        count = 0;
-        for (int i=1; i<barrieresList.length; i++) {
-            if (barrieresList[i]) {
-                if (count<=5) {
-                    newNbLotissement[count]++;
+    private boolean isFollowingPlan(Jeu j, int joueur, int place) {
+        Plan[] plansJeu = j.plans;
+        int[] lotNeededNb = new int[] {0,0,0,0,0,0};
+        int[] myLots = new int[] {0,0,0,0,0,0};
+        int[] changedLot = lotissementChanged(j, joueur, place);
+
+        int following = 0;
+
+        for (int i=0; i<3; i++) {
+            if (j.joueurs[joueur].objectifs[i]==0){
+                for (int k=0; k<plansJeu[i].nbLotissement; k++) { 
+                    lotNeededNb[plansJeu[i].tailleLotissements[k]-1]++;
                 }
-                count = 0;
-            } else {
-                count++;
             }
         }
 
-        int[] result = new int[6];
-        for (int i=0; i<result.length; i++) {
-            result[i] = newNbLotissement[i] - nbLotissement[i];
+        for (Lotissement lotissement : j.joueurs[joueur].ville.lotissements) {
+            if(lotissement.taille<7 && lotissement.dispo){
+                myLots[lotissement.taille-1]++;
+            }
         }
-        return result;
+
+
+
+        for (int i=0; i<6; i++) {
+            if (lotNeededNb[i]>myLots[i] && changedLot[i]>0) {
+                following++;
+            } else if (lotNeededNb[i]>myLots[i] && changedLot[i]<0) {
+                following--;
+            }
+        }
+
+        if (following>0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private double distanceToIdealPlace(Jeu j, int joueur, int number, int place) {
@@ -349,7 +431,7 @@ public class Strat64 extends Strat{
         int position = place%100;
         int tailleRue = j.joueurs[joueur].ville.rues[place/100].taille;
 
-        double idealRatio = (double) number/tailleRue;
+        double idealRatio = (double) number/15;
         double realRatio = (double) position/tailleRue;
 
         return Math.sqrt(Math.pow((realRatio-idealRatio), 2));
@@ -362,8 +444,9 @@ public class Strat64 extends Strat{
     }
 
     private boolean isBisNeeded(Jeu j, int joueur, int place) {
+        System.out.println(place);
         int numRue = place/100;
-        Rue rue = j.joueurs[joueur].ville.rues[numRue];
+        Rue rue = j.joueurs[joueur].ville.rues[numRue]; //java.lang.ArrayIndexOutOfBoundsException: Index 10 out of bounds for length 3
         Maison[] maisons = rue.maisons;
 
         int inf = 0;
@@ -393,8 +476,8 @@ public class Strat64 extends Strat{
         Rue rue = j.joueurs[joueur].ville.rues[numRue];
         Maison[] maisons = rue.maisons;
 
-        int indFirst = -1;
-        int indLast = -1;
+        int indFirst = 0;
+        int indLast = rue.taille-1;
 
         for (int i=0; i<rue.taille; i++) {
             if (!maisons[i].estVide()) {

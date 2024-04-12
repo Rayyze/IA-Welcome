@@ -22,6 +22,7 @@ public class JoueurHumain extends Joueur{
     //Choix de l'emplacement pour poser son numéro
     @Override
     public int choixEmplacement(Jeu j, int joueur, int numero, ArrayList<Integer> placeValide){
+        System.out.println(placeValide);
         return ClavierSingleton.getInstance().nextIntBetween(0, placeValide.size()-1);
     }
     
