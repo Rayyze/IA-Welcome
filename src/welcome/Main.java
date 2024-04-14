@@ -1,6 +1,8 @@
 package welcome;
 import welcome.ia.*;
 import welcome.utils.*;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +12,14 @@ public class Main {
         System.setProperty("file.encoding", "UTF-8");
         exempleLanceIA();
         //exempleLanceJeuHumain();
+
+        /*
+        Map<String, Double> trainResult = trainNoGroup(1000, 10, 10, 100, 0.5);
+
+        for (Map.Entry<String, Double> entry : trainResult.entrySet()) {
+            System.out.println(entry.getKey() + " : " + entry.getValue());
+        }
+        */
     }
     
     public static void exempleLanceIA() {
@@ -57,17 +67,84 @@ public class Main {
         }
     }
     
-    public static Map<String, Double> trainNoGroup(int NbGame, int nbGen, double mutationRate) {
+    public static Map<String, Double> trainNoGroup(int nbGame, int nbGen, int selection, int nbInstance, double mutationRate) {
         Map<String, Double> result = new HashMap<String,Double>();
+        Map<String, Double> tempWeights;
+        Bot bot;
+        Bot[] botArray = new Bot[nbInstance];
+        Joueur[] joueurs;
+        Jeu j; 
+        double[] scoreInstances = new double[nbInstance];
+        int[] singleInstanceScore = new int[nbGame];
+
+        for (int i=0; i<nbInstance; i++) {
+            bot = new Bot(new Strat64(), "IA", "RobotVille");
+            botArray[i] = bot;
+        }
 
         for (int i=0; i<nbGen; i++) {
-            for(int k=0; k<NbGame; k++) {
+            for (int l=0; l<nbInstance; l++) {
+                joueurs = new Joueur[1];
+                joueurs[0] = botArray[l];
+                j = new Jeu(joueurs);
 
+                if (l!=0) {
+                    tempWeights = ((Strat64) botArray[l].strat).getWeights();
+                    for (Map.Entry<String, Double> entry : tempWeights.entrySet()) {
+                        tempWeights.put(entry.getKey(), entry.getValue() - mutationRate + 2*mutationRate*Math.random());
+                    }
+                    ((Strat64) botArray[l].strat).setWeights(tempWeights);
+                }
+
+                for(int k=0; k<nbGame; k++) {
+                    int[] score = j.jouer();
+                    singleInstanceScore[k] = score[0];
+                }
+
+                int sum = 0;
+                for (int num : singleInstanceScore) {
+                    sum += num;
+                }
+                double average = (double) sum / singleInstanceScore.length;
+
+                scoreInstances[l] = average;
+            }
+
+            int[] maxIndices = getMaxIndices(scoreInstances, 10);
+            for (int l=0; l<nbInstance; l++) {
+                if (!contains(maxIndices, l)) {
+                    bot = new Bot(new Strat64(), "IA", "RobotVille");
+                    ((Strat64) bot.strat).setWeights(((Strat64) botArray[maxIndices[l%selection]].strat).getWeights());
+                    botArray[l] =  bot;
+                }
             }
         }
 
-        return result;
+        return ((Strat64) botArray[getMaxIndices(scoreInstances, 1)[0]].strat).getWeights();
     }
-    //TODO écrire la methode train
-    
+
+    public static int[] getMaxIndices(double[] array, int n) {
+        int[] indices = new int[n];
+        double[] copyArray = Arrays.copyOf(array, array.length);
+        Arrays.sort(copyArray);
+        for (int i = 0; i < n; i++) {
+            double max = copyArray[copyArray.length - 1 - i];
+            for (int j = 0; j < array.length; j++) {
+                if (array[j] == max) {
+                    indices[i] = j;
+                    break;
+                }
+            }
+        }
+        return indices;
+    }
+
+    public static boolean contains(int[] array, int value) {
+        for (int element : array) {
+            if (element == value) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

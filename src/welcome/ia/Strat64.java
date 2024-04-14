@@ -250,7 +250,7 @@ public class Strat64 extends Strat{
                     case "Agent Immobilier":
                         for(int l=1; l<7; l++) {
                             if(j.joueurs[joueur].ville.avancementPrixLotissement[l-1]==j.joueurs[joueur].ville.maxAvancement[l-1]) {
-                                decisionsScoreMap.put(key + ";invest;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
+                                decisionsScoreMap.put(key + ";invest;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place")); //TODO erreur des fois car valeur renvoyée = -1
                             } else {
                                 decisionsScoreMap.put(key + ";invest;" + Integer.toString(l), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("lot" + Integer.toString(l)));
                             }

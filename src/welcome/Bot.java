@@ -8,13 +8,13 @@ import welcome.ia.Strat;
 //Doit implémenter Stratégie et ses méthodes (dù à l'héritage de Joueur)
 public class Bot extends Joueur{
     
-    Strat strat;
+    public Strat strat; //TODO je met en public pour l'entrainement
     
     //Constructeur nécéssitant le nom du joueur ainsi que le nom de sa ville.
     public Bot(Strat _strat, String _nom, String _nomVille){
         super(_nom, _nomVille);
         strat=_strat;
-        verbose=true; //verbose mode actif pour voir le jeu
+        verbose=false; //verbose mode actif pour voir le jeu
     }
     
     //Choix de la combinaison de carte Travaux 0, 1 ou 2
