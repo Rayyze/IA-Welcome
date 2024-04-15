@@ -46,22 +46,22 @@ public class Strat64 extends Strat{
     
     public Strat64(){
         Map<String, Double> initialWeights = new HashMap<String, Double>();
-        initialWeights.put("park1", 2.80);
-        initialWeights.put("park2", 2.80);
-        initialWeights.put("park3", 2.80);
-        initialWeights.put("pool", 0.70);
-        initialWeights.put("interim", 0.10);
-        initialWeights.put("interimneeded", 0.55);
-        initialWeights.put("bisneeded", 0.0);
-        initialWeights.put("bisnotneeded", 0.0);
-        initialWeights.put("lot1", 0.30);
-        initialWeights.put("lot2", 0.20);
-        initialWeights.put("lot3", 0.20);
-        initialWeights.put("lot4", 0.75);
-        initialWeights.put("lot5", 0.20);
-        initialWeights.put("lot6", 0.90);
-        initialWeights.put("place", 4.80);
-        initialWeights.put("plan", 4.50);
+        initialWeights.put("bisnotneeded", -5.213974879492469);
+        initialWeights.put("pool", 0.43726789882263506);
+        initialWeights.put("interimneeded", 0.8880692491422643);
+        initialWeights.put("bisneeded", -0.06170021863103736);
+        initialWeights.put("park2", 0.6322501995691763);
+        initialWeights.put("lot3", -0.8879304806525509);
+        initialWeights.put("park3", 2.1120702581463164);
+        initialWeights.put("lot4", 0.15267292989312053);
+        initialWeights.put("lot1", -0.9229755709948256);
+        initialWeights.put("lot2", -0.5707999157627315);
+        initialWeights.put("interim", -3.4393318532062);
+        initialWeights.put("lot5", -1.5989570270968945);
+        initialWeights.put("lot6", -3.33273205554648);
+        initialWeights.put("place", 5.7646720818909);
+        initialWeights.put("plan", 3.3888355171867452);
+        initialWeights.put("park1", 3.6904298309590224);
         setWeights(initialWeights);
     }
 
@@ -111,7 +111,7 @@ public class Strat64 extends Strat{
     }
     
     @Override
-    public int valoriseLotissement(Jeu j, int joueur){        
+    public int valoriseLotissement(Jeu j, int joueur){      
         return valoriseLotissementResult;
     }
     
@@ -250,7 +250,7 @@ public class Strat64 extends Strat{
                     case "Agent Immobilier":
                         for(int l=1; l<7; l++) {
                             if(j.joueurs[joueur].ville.avancementPrixLotissement[l-1]==j.joueurs[joueur].ville.maxAvancement[l-1]) {
-                                decisionsScoreMap.put(key + ";invest;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place")); //TODO erreur des fois car valeur renvoyée = -1
+                                decisionsScoreMap.put(key + ";invest;1", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place")); //TODO erreur des fois car valeur renvoyée = -1
                             } else {
                                 decisionsScoreMap.put(key + ";invest;" + Integer.toString(l), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("lot" + Integer.toString(l)));
                             }
@@ -331,9 +331,7 @@ public class Strat64 extends Strat{
                 case "barrier":
                     choixBarriereResult = Integer.valueOf(decisions[3]);
                     break;
-
-                case "pool":
-                    System.out.println("pool");
+                    
                 default:
                     break;
             } 

@@ -2,9 +2,8 @@ package welcome;
 import welcome.ia.*;
 import welcome.utils.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 public class Main {
 
@@ -13,12 +12,13 @@ public class Main {
         exempleLanceIA();
         //exempleLanceJeuHumain();
 
-        /*
-        Map<String, Double> trainResult = trainNoGroup(1000, 10, 10, 100, 0.5);
+        /* 
+        Map<String, Double> trainResult = trainNoGroup(1000, 100, 10, 100, 0.5);
 
         for (Map.Entry<String, Double> entry : trainResult.entrySet()) {
             System.out.println(entry.getKey() + " : " + entry.getValue());
         }
+
         */
     }
     
@@ -68,7 +68,6 @@ public class Main {
     }
     
     public static Map<String, Double> trainNoGroup(int nbGame, int nbGen, int selection, int nbInstance, double mutationRate) {
-        Map<String, Double> result = new HashMap<String,Double>();
         Map<String, Double> tempWeights;
         Bot bot;
         Bot[] botArray = new Bot[nbInstance];
@@ -83,13 +82,16 @@ public class Main {
         }
 
         for (int i=0; i<nbGen; i++) {
+            System.out.println("Gen n°"+i);
             for (int l=0; l<nbInstance; l++) {
                 joueurs = new Joueur[1];
                 joueurs[0] = botArray[l];
                 j = new Jeu(joueurs);
+                j.verboseOnOff(false);
 
                 if (l!=0) {
-                    tempWeights = ((Strat64) botArray[l].strat).getWeights();
+                    tempWeights = new HashMap<String, Double>();
+                    tempWeights.putAll(((Strat64) botArray[l].strat).getWeights());
                     for (Map.Entry<String, Double> entry : tempWeights.entrySet()) {
                         tempWeights.put(entry.getKey(), entry.getValue() - mutationRate + 2*mutationRate*Math.random());
                     }
@@ -98,6 +100,8 @@ public class Main {
 
                 for(int k=0; k<nbGame; k++) {
                     int[] score = j.jouer();
+                    j.reset();
+                    j.verboseOnOff(false);
                     singleInstanceScore[k] = score[0];
                 }
 
@@ -110,34 +114,72 @@ public class Main {
                 scoreInstances[l] = average;
             }
 
-            int[] maxIndices = getMaxIndices(scoreInstances, 10);
-            for (int l=0; l<nbInstance; l++) {
-                if (!contains(maxIndices, l)) {
-                    bot = new Bot(new Strat64(), "IA", "RobotVille");
-                    ((Strat64) bot.strat).setWeights(((Strat64) botArray[maxIndices[l%selection]].strat).getWeights());
-                    botArray[l] =  bot;
+            //selection :
+            if (i!=nbGen-1) {
+                int maxIndex = getMaxIndex(scoreInstances);
+                for (int l=0; l<nbInstance; l++) {
+                    if (maxIndex!=l) {
+                        bot = new Bot(new Strat64(), "IA", "RobotVille");
+                        Map<String, Double> weightsCopy = new HashMap<String, Double>();
+                        weightsCopy.putAll(((Strat64) botArray[maxIndex].strat).getWeights());
+                        ((Strat64) bot.strat).setWeights(weightsCopy);
+                        botArray[l] =  bot;
+                    }
                 }
             }
         }
+
+        System.out.println(scoreInstances[getMaxIndices(scoreInstances, 1)[0]]);
 
         return ((Strat64) botArray[getMaxIndices(scoreInstances, 1)[0]].strat).getWeights();
     }
 
-    public static int[] getMaxIndices(double[] array, int n) {
-        int[] indices = new int[n];
-        double[] copyArray = Arrays.copyOf(array, array.length);
-        Arrays.sort(copyArray);
-        for (int i = 0; i < n; i++) {
-            double max = copyArray[copyArray.length - 1 - i];
-            for (int j = 0; j < array.length; j++) {
-                if (array[j] == max) {
-                    indices[i] = j;
-                    break;
-                }
+    public static int getMaxIndex(double[] array) {
+        if (array == null || array.length == 0) {
+            throw new IllegalArgumentException("Array must not be null or empty");
+        }
+
+        int maxIndex = 0;  // Assume the first element is the maximum
+        double maxValue = array[0];
+
+        for (int i = 1; i < array.length; i++) {
+            if (array[i] > maxValue) {
+                maxValue = array[i];
+                maxIndex = i;
             }
         }
+
+        return maxIndex;
+    }
+
+    public static int[] getMaxIndices(double[] array, int n) {
+    
+        int[] indices = new int[n];
+        double tempMax;
+        int tempInd;
+        boolean[] used = new boolean[array.length];
+        for (int i=0; i<array.length; i++) {
+            used[i] = false;
+        }
+        double[] maxima = new double[n];
+        
+        for (int j=0; j<n; j++) {
+            tempMax = 0.0;
+            tempInd = -1;
+            for (int i=0; i<array.length; i++) {
+                if (!used[i] && tempMax<array[i]) {
+                    tempMax = array[i];
+                    used[i] = true;
+                    tempInd = i;
+                }
+            }
+            maxima[j] = tempMax;
+            indices[j] = tempInd;
+        }
+    
         return indices;
     }
+    
 
     public static boolean contains(int[] array, int value) {
         for (int element : array) {
