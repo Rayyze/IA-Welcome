@@ -38,6 +38,8 @@ public class Strat64 extends Strat{
      */
 
     private int[] drawnNumbers = new int[18];
+    private int[] totalNumbers = new int[]{0,3,3,4,5,6,7,8,9,8,7,6,5,4,3,3,0,0};
+    private int tour = 0;
 
     private Map<String, Double> decisionsScoreMap = new HashMap<String, Double>();
     private int choixCombinaisonResult = 0;
@@ -49,22 +51,22 @@ public class Strat64 extends Strat{
     
     public Strat64(){
         Map<String, Double> initialWeights = new HashMap<String, Double>();
-        initialWeights.put("bisnotneeded", -5.213974879492469);
-        initialWeights.put("pool", 0.43726789882263506);
-        initialWeights.put("interimneeded", 0.8880692491422643);
-        initialWeights.put("bisneeded", -0.06170021863103736);
-        initialWeights.put("park2", 0.6322501995691763);
-        initialWeights.put("lot3", -0.8879304806525509);
-        initialWeights.put("park3", 2.1120702581463164);
-        initialWeights.put("lot4", 0.15267292989312053);
-        initialWeights.put("lot1", -0.9229755709948256);
-        initialWeights.put("lot2", -0.5707999157627315);
-        initialWeights.put("interim", -3.4393318532062);
-        initialWeights.put("lot5", -1.5989570270968945);
-        initialWeights.put("lot6", -3.33273205554648);
-        initialWeights.put("place", 5.7646720818909);
-        initialWeights.put("plan", 3.3888355171867452);
-        initialWeights.put("park1", 3.6904298309590224);
+        initialWeights.put("park1", 7.129482883637951);
+        initialWeights.put("park2", 2.3228956853445775);
+        initialWeights.put("park3", 3.768497288773496);
+        initialWeights.put("pool", 0.634140649275078);
+        initialWeights.put("interim", -1.4162862869886308);
+        initialWeights.put("interimneeded", 2.2897171988786384);
+        initialWeights.put("bisneeded", -2.663308682791608);
+        initialWeights.put("bisnotneeded", -4.701958345341477);
+        initialWeights.put("lot1", -1.4469854143185723);
+        initialWeights.put("lot2", -1.1171254059511642);
+        initialWeights.put("lot3", -2.182323245996866);
+        initialWeights.put("lot4", 0.24961986541084624);
+        initialWeights.put("lot5", -2.273567746851794);
+        initialWeights.put("lot6", -2.9609902855729286);
+        initialWeights.put("place", 7.493868932785887);
+        initialWeights.put("plan", 2.1458941319774656);
         initialWeights.put("numrar", 1.0);
         setWeights(initialWeights);
     }
@@ -96,8 +98,13 @@ public class Strat64 extends Strat{
     @Override
     public int choixCombinaison(Jeu j, int joueur){
         decisionsScoreMap = new HashMap<String, Double>();
+        tour++;
         gradeCombination(j, joueur);
         takeDecision(j);
+        updateDrawnNumber(j);
+        if(tour==27){
+            drawnNumbers = new int[18];
+        }
         return choixCombinaisonResult;
     }
     
@@ -292,9 +299,9 @@ public class Strat64 extends Strat{
                 for (int l=0; l<interimPossibilities.size(); l++) {
                     key = Integer.toString(i) + ";" + Integer.toString(interimPossibilities.get(l));
                     if(isInterimNeeded(j, joueur, interimPossibilities.get(l))) {
-                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interimneeded") + numberRarity(numerosInterim.get(i).get(k))*weights.get("numrar"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interimneeded"));
                     } else {
-                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interim") + numberRarity(numerosInterim.get(i).get(k))*weights.get("numrar"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interim"));
                     }
                 }
             }
@@ -494,7 +501,7 @@ public class Strat64 extends Strat{
     }
 
     private double numberRarity(int number) {
-        return drawnNumbers[number]/81;
+        return 1/(totalNumbers[number]-drawnNumbers[number]+1);
     }
 
     private void updateDrawnNumber(Jeu j) {
@@ -506,5 +513,8 @@ public class Strat64 extends Strat{
     }
     
     @Override
-    public void resetStrat(){};
+    public void resetStrat(){
+        drawnNumbers = new int[18];
+        tour = 0;
+    };
 }

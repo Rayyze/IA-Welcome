@@ -9,17 +9,17 @@ public class Main {
 
     public static void main(String[] args) {
         System.setProperty("file.encoding", "UTF-8");
-        exempleLanceIA();
+        //exempleLanceIA();
         //exempleLanceJeuHumain();
 
-        /* 
-        Map<String, Double> trainResult = trainNoGroup(1000, 100, 10, 100, 0.5);
+        
+        Map<String, Double> trainResult = trainNoGroup2(100, 100, 10, 200, 0.5);
 
         for (Map.Entry<String, Double> entry : trainResult.entrySet()) {
             System.out.println(entry.getKey() + " : " + entry.getValue());
         }
 
-        */
+        
     }
     
     public static void exempleLanceIA() {
@@ -69,6 +69,8 @@ public class Main {
     
     public static Map<String, Double> trainNoGroup2(int nbGame, int nbGen, int selection, int nbInstance, double mutationRate) {
 
+        long mediumTime = 0;
+
         Map<String, Double> tempWeights;
         Bot bot = new Bot(new Strat64(), "Léo", "huuuuuuh");
         @SuppressWarnings("unchecked")
@@ -84,26 +86,30 @@ public class Main {
         }
 
         for (int i=0; i<nbGen; i++) {
-            System.out.println("Gen n°"+i);
             for (int l=0; l<nbInstance; l++) {
-                j = new Jeu(joueurs);
+                j.reset();
                 j.verboseOnOff(false);
 
                 if (l!=0) {
                     tempWeights = new HashMap<String, Double>();
-                    //tempWeights.putAll(((Strat64) botArray[l].strat).getWeights());
+                    tempWeights.putAll(weightsArray[l]);
                     for (Map.Entry<String, Double> entry : tempWeights.entrySet()) {
                         tempWeights.put(entry.getKey(), entry.getValue() - mutationRate + 2*mutationRate*Math.random());
                     }
-                    //((Strat64) botArray[l].strat).setWeights(tempWeights);
+                    ((Strat64) bot.strat).setWeights(tempWeights);
                 }
 
+                long startTime = System.currentTimeMillis(); // or System.nanoTime()
                 for(int k=0; k<nbGame; k++) {
                     int[] score = j.jouer();
                     j.reset();
                     j.verboseOnOff(false);
+                    joueurs[0].resetStrat();
                     singleInstanceScore[k] = score[0];
                 }
+                long endTime = System.currentTimeMillis(); // or System.nanoTime()
+                long duration = endTime - startTime;
+                mediumTime = (mediumTime*((i+1)*(l+1)-1) + duration)/((i+1)*(l+1));
 
                 int sum = 0;
                 for (int num : singleInstanceScore) {
@@ -112,18 +118,18 @@ public class Main {
                 double average = (double) sum / singleInstanceScore.length;
 
                 scoreInstances[l] = average;
+
+                System.out.println("Gen n°"+i+", instance n°"+l+", with average : "+average + ", estimated remaining time : "+(nbInstance*nbGen-i*l)*mediumTime/1000+"s");
             }
 
             //selection :
             if (i!=nbGen-1) {
-                int maxIndex = getMaxIndex(scoreInstances);
+                int[] maxIndices = getMaxIndices(scoreInstances, selection);
                 for (int l=0; l<nbInstance; l++) {
-                    if (maxIndex!=l) {
-                        bot = new Bot(new Strat64(), "IA", "RobotVille");
+                    if (!contains(maxIndices, l)) {
                         Map<String, Double> weightsCopy = new HashMap<String, Double>();
-                        //weightsCopy.putAll(((Strat64) botArray[maxIndex].strat).getWeights());
+                        weightsCopy.putAll(weightsArray[maxIndices[l%selection]]);
                         ((Strat64) bot.strat).setWeights(weightsCopy);
-                        //botArray[l] =  bot;
                     }
                 }
             }
