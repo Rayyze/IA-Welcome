@@ -18,23 +18,26 @@ public class Strat64 extends Strat{
 
     public Map<String, Double> weights = new HashMap<String, Double>();
     /*
-     * park1
-     * park2
-     * park3
-     * pool
-     * interim
-     * interimneeded
-     * bisneeded
-     * bisnotneeded
-     * lot1
-     * lot2
-     * lot3
-     * lot4
-     * lot5
-     * lot6
-     * place
-     * plan
+     * park1 : valorise les parks de la rue 1
+     * park2 : valorise les parks de la rue 2
+     * park3 : valorise les parks de la rue 3
+     * pool : si la piscine est sur un emplacement piscine
+     * interim si l'interim n'est pas nécessaire
+     * interimneeded : si l'interim est nécessaire
+     * bisneeded : si le bis est nécessaire
+     * bisnotneeded : si le bis n'est pas nécessaire
+     * lot1 : valorise les lotissement de 1
+     * lot2 : valorise les lotissement de 2
+     * lot3 : valorise les lotissement de 3
+     * lot4 : valorise les lotissement de 4
+     * lot5 : valorise les lotissement de 5
+     * lot6 : valorise les lotissement de 6
+     * place : emplacement choisi
+     * plan : les plans
+     * numrar : rareté du nombre
      */
+
+    private int[] drawnNumbers = new int[18];
 
     private Map<String, Double> decisionsScoreMap = new HashMap<String, Double>();
     private int choixCombinaisonResult = 0;
@@ -62,11 +65,14 @@ public class Strat64 extends Strat{
         initialWeights.put("place", 5.7646720818909);
         initialWeights.put("plan", 3.3888355171867452);
         initialWeights.put("park1", 3.6904298309590224);
+        initialWeights.put("numrar", 1.0);
         setWeights(initialWeights);
     }
 
     public Map<String, Double> getWeights() {
-        return weights;
+        Map<String, Double> weightsCopy = new HashMap<String, Double>();
+        weightsCopy.putAll(weights);
+        return weightsCopy;
     }
 
     public void setWeights(Map<String, Double> inputWeights) { //TODO mettre en private avant d'envoyer
@@ -220,9 +226,9 @@ public class Strat64 extends Strat{
                 switch (action) {
                     case "Fabricant de piscine":
                         if (isOnPool(j, joueur, possibilities.get(k))) {
-                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("pool"));
+                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("pool") + numberRarity(numero)*weights.get("numrar"));
                         } else {
-                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
+                            decisionsScoreMap.put(key + ";pool;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + numberRarity(numero)*weights.get("numrar"));
                         }
                         break;
 
@@ -231,28 +237,28 @@ public class Strat64 extends Strat{
                         for (int l=0; l<bisPossibilities.size(); l++) {
                             if (Math.abs(bisPossibilities.get(l))!=possibilities.get(k))
                                 if(isBisNeeded(j, joueur, Math.abs(bisPossibilities.get(l)))) {
-                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisneeded"));
+                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisneeded") + numberRarity(numero)*weights.get("numrar"));
                                 } else {
-                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisnotneeded"));
+                                    decisionsScoreMap.put(key + ";bis;" + Integer.toString(bisPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("bisnotneeded") + numberRarity(numero)*weights.get("numrar"));
                                 }
                         }
-                        decisionsScoreMap.put(key + ";bis;1000" , -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
+                        decisionsScoreMap.put(key + ";bis;1000" , -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + numberRarity(numero)*weights.get("numrar"));
                         break;
                     
                     case "Paysagiste\t":
                         if (isParkFull(j, joueur, possibilities.get(k))) {
-                            decisionsScoreMap.put(key + ";nopark;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place"));
+                            decisionsScoreMap.put(key + ";nopark;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + numberRarity(numero)*weights.get("numrar"));
                         } else {
-                            decisionsScoreMap.put(key + ";park;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("park" + Integer.toString(possibilities.get(k)/100 + 1)));
+                            decisionsScoreMap.put(key + ";park;0", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("park" + Integer.toString(possibilities.get(k)/100 + 1)) + numberRarity(numero)*weights.get("numrar"));
                         }
                         break;
 
                     case "Agent Immobilier":
                         for(int l=1; l<7; l++) {
                             if(j.joueurs[joueur].ville.avancementPrixLotissement[l-1]==j.joueurs[joueur].ville.maxAvancement[l-1]) {
-                                decisionsScoreMap.put(key + ";invest;1", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place")); //TODO erreur des fois car valeur renvoyée = -1
+                                decisionsScoreMap.put(key + ";invest;1", -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + numberRarity(numero)*weights.get("numrar"));
                             } else {
-                                decisionsScoreMap.put(key + ";invest;" + Integer.toString(l), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("lot" + Integer.toString(l)));
+                                decisionsScoreMap.put(key + ";invest;" + Integer.toString(l), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + weights.get("lot" + Integer.toString(l)) + numberRarity(numero)*weights.get("numrar"));
                             }
                         }
                         break;
@@ -266,9 +272,9 @@ public class Strat64 extends Strat{
                                 lotImpact += changedLot[m]*weights.get("lot" + Integer.toString(m+1));
                             }
                             if(isFollowingPlan(j, joueur, barrierPossibilities.get(l))) {
-                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact + weights.get("plan"));
+                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact + weights.get("plan") + numberRarity(numero)*weights.get("numrar"));
                             } else {
-                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact);
+                                decisionsScoreMap.put(key + ";barrier;" + Integer.toString(barrierPossibilities.get(l)), -distanceToIdealPlace(j, joueur, numero, possibilities.get(k))*weights.get("place") + lotImpact + numberRarity(numero)*weights.get("numrar"));
                             }
                         }
                         break;
@@ -286,9 +292,9 @@ public class Strat64 extends Strat{
                 for (int l=0; l<interimPossibilities.size(); l++) {
                     key = Integer.toString(i) + ";" + Integer.toString(interimPossibilities.get(l));
                     if(isInterimNeeded(j, joueur, interimPossibilities.get(l))) {
-                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interimneeded"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interimneeded") + numberRarity(numerosInterim.get(i).get(k))*weights.get("numrar"));
                     } else {
-                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interim"));
+                        decisionsScoreMap.put(key + ";interim;" + Integer.toString(numerosInterim.get(i).get(k)), -distanceToIdealPlace(j, joueur, numerosInterim.get(i).get(k), interimPossibilities.get(l))*weights.get("place") + weights.get("interim") + numberRarity(numerosInterim.get(i).get(k))*weights.get("numrar"));
                     }
                 }
             }
@@ -485,6 +491,18 @@ public class Strat64 extends Strat{
 
     private boolean isOnPool(Jeu j, int joueur, int place) {
         return j.joueurs[joueur].ville.rues[place/100].maisons[place%100].emplacementPiscine;
+    }
+
+    private double numberRarity(int number) {
+        return drawnNumbers[number]/81;
+    }
+
+    private void updateDrawnNumber(Jeu j) {
+        int numero;
+        for (int i=0; i<3; i++) {
+            numero = ((Travaux) j.numeros[i].top()).getNumero();
+            drawnNumbers[numero]++;
+        }
     }
     
     @Override

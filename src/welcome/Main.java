@@ -67,6 +67,73 @@ public class Main {
         }
     }
     
+    public static Map<String, Double> trainNoGroup2(int nbGame, int nbGen, int selection, int nbInstance, double mutationRate) {
+
+        Map<String, Double> tempWeights;
+        Bot bot = new Bot(new Strat64(), "Léo", "huuuuuuh");
+        @SuppressWarnings("unchecked")
+        Map<String, Double>[] weightsArray = new Map[nbInstance];
+        Joueur[] joueurs = new Joueur[1];
+        joueurs[0] = bot;
+        Jeu j = new Jeu(joueurs);
+        double[] scoreInstances = new double[nbInstance];
+        int[] singleInstanceScore = new int[nbGame];
+
+        for (int i=0; i<nbInstance; i++) {
+            weightsArray[i] = ((Strat64) bot.strat).getWeights();
+        }
+
+        for (int i=0; i<nbGen; i++) {
+            System.out.println("Gen n°"+i);
+            for (int l=0; l<nbInstance; l++) {
+                j = new Jeu(joueurs);
+                j.verboseOnOff(false);
+
+                if (l!=0) {
+                    tempWeights = new HashMap<String, Double>();
+                    //tempWeights.putAll(((Strat64) botArray[l].strat).getWeights());
+                    for (Map.Entry<String, Double> entry : tempWeights.entrySet()) {
+                        tempWeights.put(entry.getKey(), entry.getValue() - mutationRate + 2*mutationRate*Math.random());
+                    }
+                    //((Strat64) botArray[l].strat).setWeights(tempWeights);
+                }
+
+                for(int k=0; k<nbGame; k++) {
+                    int[] score = j.jouer();
+                    j.reset();
+                    j.verboseOnOff(false);
+                    singleInstanceScore[k] = score[0];
+                }
+
+                int sum = 0;
+                for (int num : singleInstanceScore) {
+                    sum += num;
+                }
+                double average = (double) sum / singleInstanceScore.length;
+
+                scoreInstances[l] = average;
+            }
+
+            //selection :
+            if (i!=nbGen-1) {
+                int maxIndex = getMaxIndex(scoreInstances);
+                for (int l=0; l<nbInstance; l++) {
+                    if (maxIndex!=l) {
+                        bot = new Bot(new Strat64(), "IA", "RobotVille");
+                        Map<String, Double> weightsCopy = new HashMap<String, Double>();
+                        //weightsCopy.putAll(((Strat64) botArray[maxIndex].strat).getWeights());
+                        ((Strat64) bot.strat).setWeights(weightsCopy);
+                        //botArray[l] =  bot;
+                    }
+                }
+            }
+        }
+
+        System.out.println(scoreInstances[getMaxIndices(scoreInstances, 1)[0]]);
+
+        return weightsArray[getMaxIndices(scoreInstances, 1)[0]];
+    }
+
     public static Map<String, Double> trainNoGroup(int nbGame, int nbGen, int selection, int nbInstance, double mutationRate) {
         Map<String, Double> tempWeights;
         Bot bot;
